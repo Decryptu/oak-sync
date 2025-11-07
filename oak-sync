@@ -1,0 +1,222 @@
+#!/usr/bin/env bash
+
+set -e
+
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m' # No Color
+
+# Configuration
+BASE_PATH="/Users/gurvan/documents/github"
+REPO_NAMES=("api" "back" "bots" "front" "maintenance" "scripts" "webhook")
+PREPROD_BRANCH="preprod"
+PROD_BRANCH="prod"
+
+# Check if gum is installed
+if ! command -v gum &> /dev/null; then
+    echo -e "${RED}Error: 'gum' is not installed.${NC}"
+    echo "Install it with: brew install gum"
+    exit 1
+fi
+
+# Display header
+clear
+gum style \
+    --foreground 212 \
+    --border-foreground 212 \
+    --border double \
+    --align center \
+    --width 60 \
+    --margin "1 2" \
+    --padding "2 4" \
+    'Oak Research Repository Sync Tool' \
+    '' \
+    'Sync prod branch with preprod across multiple repos'
+
+echo ""
+gum style \
+    --foreground 3 \
+    --bold \
+    "⚠️  WARNING: This tool uses force-push operations!"
+echo ""
+echo "💡 Tip: Press Ctrl+C at any time to cancel"
+echo ""
+
+# Create options for gum choose
+options=()
+for repo in "${REPO_NAMES[@]}"; do
+    options+=("oak-research-$repo")
+done
+
+# Let user select repositories
+echo "Select repositories to sync (use space to select, enter to confirm):"
+echo ""
+
+selected=$(gum choose --no-limit --height 10 "${options[@]}")
+
+# Check if any repos were selected
+if [ -z "$selected" ]; then
+    echo -e "${YELLOW}No repositories selected. Exiting.${NC}"
+    exit 0
+fi
+
+# Convert selected repos to array
+mapfile -t selected_repos <<< "$selected"
+
+# Show confirmation prompt
+echo ""
+gum style --foreground 212 --bold "You selected ${#selected_repos[@]} repository(ies):"
+for repo in "${selected_repos[@]}"; do
+    echo "  • $repo"
+done
+echo ""
+
+gum style --foreground 3 "This will perform the following operations on each repo:"
+echo "  1. git fetch origin"
+echo "  2. git checkout $PROD_BRANCH"
+echo "  3. git reset --hard origin/$PREPROD_BRANCH"
+echo "  4. git push --force"
+echo ""
+
+gum confirm "Are you sure you want to continue?" || {
+    echo -e "${YELLOW}Operation cancelled.${NC}"
+    exit 0
+}
+
+echo ""
+echo "Starting sync process..."
+echo ""
+
+# Track results
+success_count=0
+error_count=0
+declare -a failed_repos
+
+# Process each selected repository
+for repo in "${selected_repos[@]}"; do
+    repo_path="$BASE_PATH/$repo"
+
+    echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    gum style --foreground 212 --bold "Processing: $repo"
+
+    # Check if directory exists
+    if [ ! -d "$repo_path" ]; then
+        echo -e "${RED}✗ Error: Directory not found: $repo_path${NC}"
+        ((error_count++))
+        failed_repos+=("$repo (directory not found)")
+        continue
+    fi
+
+    # Change to repo directory
+    cd "$repo_path" || {
+        echo -e "${RED}✗ Error: Could not change to directory: $repo_path${NC}"
+        ((error_count++))
+        failed_repos+=("$repo (cd failed)")
+        continue
+    }
+
+    # Check if it's a git repository
+    if [ ! -d ".git" ]; then
+        echo -e "${RED}✗ Error: Not a git repository: $repo_path${NC}"
+        ((error_count++))
+        failed_repos+=("$repo (not a git repo)")
+        continue
+    fi
+
+    # Step 1: Fetch origin (show output for authentication prompts)
+    echo "→ Fetching from origin..."
+    if git fetch origin; then
+        echo -e "${GREEN}✓ Fetched latest from origin${NC}"
+    else
+        echo -e "${RED}✗ Error: Failed to fetch from origin${NC}"
+        ((error_count++))
+        failed_repos+=("$repo (fetch failed)")
+        continue
+    fi
+
+    # Check if preprod branch exists
+    if ! git show-ref --verify --quiet "refs/remotes/origin/$PREPROD_BRANCH"; then
+        echo -e "${RED}✗ Error: Branch 'origin/$PREPROD_BRANCH' does not exist${NC}"
+        ((error_count++))
+        failed_repos+=("$repo (preprod branch not found)")
+        continue
+    fi
+
+    # Check if prod branch exists
+    if ! git show-ref --verify --quiet "refs/remotes/origin/$PROD_BRANCH"; then
+        echo -e "${RED}✗ Error: Branch 'origin/$PROD_BRANCH' does not exist${NC}"
+        ((error_count++))
+        failed_repos+=("$repo (prod branch not found)")
+        continue
+    fi
+
+    # Step 2: Checkout prod
+    echo "→ Checking out $PROD_BRANCH..."
+    if git checkout "$PROD_BRANCH" 2>&1; then
+        echo -e "${GREEN}✓ Checked out $PROD_BRANCH${NC}"
+    else
+        echo -e "${RED}✗ Error: Failed to checkout $PROD_BRANCH${NC}"
+        ((error_count++))
+        failed_repos+=("$repo (checkout failed)")
+        continue
+    fi
+
+    # Step 3: Reset to preprod
+    echo "→ Resetting $PROD_BRANCH to origin/$PREPROD_BRANCH..."
+    if git reset --hard "origin/$PREPROD_BRANCH" 2>&1; then
+        echo -e "${GREEN}✓ Reset $PROD_BRANCH to origin/$PREPROD_BRANCH${NC}"
+    else
+        echo -e "${RED}✗ Error: Failed to reset to origin/$PREPROD_BRANCH${NC}"
+        ((error_count++))
+        failed_repos+=("$repo (reset failed)")
+        continue
+    fi
+
+    # Step 4: Force push (show output for authentication prompts)
+    echo "→ Force pushing to origin/$PROD_BRANCH..."
+    if git push --force; then
+        echo -e "${GREEN}✓ Force pushed to origin/$PROD_BRANCH${NC}"
+    else
+        echo -e "${RED}✗ Error: Failed to force push${NC}"
+        ((error_count++))
+        failed_repos+=("$repo (push failed)")
+        continue
+    fi
+
+    ((success_count++))
+    echo -e "${GREEN}✓ Successfully synced $repo${NC}"
+    echo ""
+done
+
+# Display summary
+echo ""
+echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+gum style \
+    --foreground 212 \
+    --border-foreground 212 \
+    --border double \
+    --align center \
+    --width 60 \
+    --margin "1 2" \
+    --padding "1 2" \
+    'SYNC SUMMARY'
+
+echo ""
+echo -e "${GREEN}✓ Successfully synced: $success_count repository(ies)${NC}"
+
+if [ $error_count -gt 0 ]; then
+    echo -e "${RED}✗ Failed to sync: $error_count repository(ies)${NC}"
+    echo ""
+    echo "Failed repositories:"
+    for failed_repo in "${failed_repos[@]}"; do
+        echo -e "${RED}  • $failed_repo${NC}"
+    done
+    exit 1
+fi
+
+echo ""
+gum style --foreground 212 "All repositories synced successfully! 🎉"
+exit 0
