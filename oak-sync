@@ -124,15 +124,16 @@ for repo in "${selected_repos[@]}"; do
         continue
     fi
 
-    # Step 1: Fetch origin with spinner
-    gum spin --spinner dot --title "Fetching from origin..." -- \
-        git fetch origin 2>&1 || {
-        echo -e "${RED}✗ Error: Failed to fetch from origin${NC}"
+    # Step 1: Fetch origin (show output for authentication prompts)
+    echo "→ Fetching from origin..."
+    if timeout 60 git fetch origin; then
+        echo -e "${GREEN}✓ Fetched latest from origin${NC}"
+    else
+        echo -e "${RED}✗ Error: Failed to fetch from origin (timeout or error)${NC}"
         ((error_count++))
         failed_repos+=("$repo (fetch failed)")
         continue
-    }
-    echo -e "${GREEN}✓ Fetched latest from origin${NC}"
+    fi
 
     # Check if preprod branch exists
     if ! git show-ref --verify --quiet "refs/remotes/origin/$PREPROD_BRANCH"; then
@@ -151,34 +152,37 @@ for repo in "${selected_repos[@]}"; do
     fi
 
     # Step 2: Checkout prod
-    gum spin --spinner dot --title "Checking out $PROD_BRANCH..." -- \
-        git checkout "$PROD_BRANCH" 2>&1 || {
+    echo "→ Checking out $PROD_BRANCH..."
+    if git checkout "$PROD_BRANCH" 2>&1; then
+        echo -e "${GREEN}✓ Checked out $PROD_BRANCH${NC}"
+    else
         echo -e "${RED}✗ Error: Failed to checkout $PROD_BRANCH${NC}"
         ((error_count++))
         failed_repos+=("$repo (checkout failed)")
         continue
-    }
-    echo -e "${GREEN}✓ Checked out $PROD_BRANCH${NC}"
+    fi
 
     # Step 3: Reset to preprod
-    gum spin --spinner dot --title "Resetting $PROD_BRANCH to origin/$PREPROD_BRANCH..." -- \
-        git reset --hard "origin/$PREPROD_BRANCH" 2>&1 || {
+    echo "→ Resetting $PROD_BRANCH to origin/$PREPROD_BRANCH..."
+    if git reset --hard "origin/$PREPROD_BRANCH" 2>&1; then
+        echo -e "${GREEN}✓ Reset $PROD_BRANCH to origin/$PREPROD_BRANCH${NC}"
+    else
         echo -e "${RED}✗ Error: Failed to reset to origin/$PREPROD_BRANCH${NC}"
         ((error_count++))
         failed_repos+=("$repo (reset failed)")
         continue
-    }
-    echo -e "${GREEN}✓ Reset $PROD_BRANCH to origin/$PREPROD_BRANCH${NC}"
+    fi
 
-    # Step 4: Force push
-    gum spin --spinner dot --title "Force pushing to origin/$PROD_BRANCH..." -- \
-        git push --force 2>&1 || {
-        echo -e "${RED}✗ Error: Failed to force push${NC}"
+    # Step 4: Force push (show output for authentication prompts)
+    echo "→ Force pushing to origin/$PROD_BRANCH..."
+    if timeout 60 git push --force; then
+        echo -e "${GREEN}✓ Force pushed to origin/$PROD_BRANCH${NC}"
+    else
+        echo -e "${RED}✗ Error: Failed to force push (timeout or error)${NC}"
         ((error_count++))
         failed_repos+=("$repo (push failed)")
         continue
-    }
-    echo -e "${GREEN}✓ Force pushed to origin/$PROD_BRANCH${NC}"
+    fi
 
     ((success_count++))
     echo -e "${GREEN}✓ Successfully synced $repo${NC}"
