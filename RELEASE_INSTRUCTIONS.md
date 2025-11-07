@@ -6,12 +6,13 @@ Follow these steps to prepare oak-sync for Homebrew distribution.
 
 ### Option A: Using GitHub Web Interface (Recommended)
 
-1. Go to: https://github.com/Decryptu/oak-sync/releases/new
+1. Go to: <https://github.com/Decryptu/oak-sync/releases/new>
 
 2. Fill in the release form:
    - **Tag version**: `v1.0.0` (create new tag)
    - **Release title**: `v1.0.0 - Initial Release`
    - **Description**:
+
      ```markdown
      ## Oak Sync v1.0.0
 
@@ -40,9 +41,11 @@ Follow these steps to prepare oak-sync for Homebrew distribution.
      ```
 
      ### Requirements
+
      - macOS
      - gum (`brew install gum`)
      - git
+
      ```
 
 3. Click **"Publish release"**
@@ -77,6 +80,7 @@ shasum -a 256 oak-sync-1.0.0.tar.gz
 **Copy the resulting hash** - you'll need it for the Homebrew formula.
 
 Example output:
+
 ```
 abc123def456... oak-sync-1.0.0.tar.gz
 ```
@@ -84,6 +88,7 @@ abc123def456... oak-sync-1.0.0.tar.gz
 ## Step 3: Update the Homebrew Formula
 
 Now you'll work with another AI agent to:
+
 1. Clone your `homebrew-tap` repository
 2. Create/update `Formula/oak-sync.rb` with the SHA256 hash
 3. Test the formula

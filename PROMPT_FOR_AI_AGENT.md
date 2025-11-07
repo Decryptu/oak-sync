@@ -12,10 +12,10 @@ I have a CLI tool called `oak-sync` that I need to add to my Homebrew tap at `ht
 
 ## Repository Information
 
-- **Tool Repository**: https://github.com/Decryptu/oak-sync
-- **Tap Repository**: https://github.com/Decryptu/homebrew-tap
+- **Tool Repository**: <https://github.com/Decryptu/oak-sync>
+- **Tap Repository**: <https://github.com/Decryptu/homebrew-tap>
 - **Release Version**: v1.0.0
-- **Release URL**: https://github.com/Decryptu/oak-sync/archive/refs/tags/v1.0.0.tar.gz
+- **Release URL**: <https://github.com/Decryptu/oak-sync/archive/refs/tags/v1.0.0.tar.gz>
 - **SHA256 Hash**: [YOU NEED TO PROVIDE THIS - see instructions below]
 
 ## Before You Start
@@ -32,6 +32,7 @@ Then replace `[SHA256_HASH_HERE]` in the formula below with the actual hash.
 ## Instructions
 
 1. **Clone the tap repository**:
+
    ```bash
    git clone https://github.com/Decryptu/homebrew-tap.git
    cd homebrew-tap
@@ -64,6 +65,7 @@ end
 3. **Replace the SHA256 hash** in the formula with the one you calculated
 
 4. **Test the formula locally**:
+
    ```bash
    # Audit the formula
    brew audit --strict --online Formula/oak-sync.rb
@@ -80,6 +82,7 @@ end
    ```
 
 5. **If tests pass, commit and push**:
+
    ```bash
    git add Formula/oak-sync.rb
    git commit -m "Add oak-sync formula v1.0.0
@@ -94,6 +97,7 @@ end
 ## About oak-sync
 
 oak-sync is a Terminal UI tool that:
+
 - Allows interactive selection of multiple repositories using checkboxes
 - Syncs production branches with preprod branches across Oak Research repos
 - Performs: fetch, checkout prod, reset to preprod, force push
@@ -130,22 +134,26 @@ homebrew-tap/
 ## Troubleshooting
 
 **If audit fails:**
+
 - Check SHA256 matches the tarball exactly
 - Ensure URL is accessible
 - Verify Ruby syntax is correct
 
 **If installation fails:**
+
 - Check that the `oak-sync` file exists in the root of the tarball
 - Verify it has executable permissions (it should in the tarball)
 - Make sure gum is available: `brew install gum`
 
 **If the formula works but oak-sync doesn't run:**
+
 - The issue is likely with the tool itself, not the formula
 - Check that gum is installed: `which gum`
 
 ## Reference
 
 You can look at the existing `zigdex.rb` formula in the same repo for style reference:
+
 ```bash
 cat Formula/zigdex.rb
 ```
@@ -166,6 +174,7 @@ cat Formula/zigdex.rb
 ## What I Need From You
 
 After creating the release (Step 1 above), provide the other AI agent with:
+
 1. This entire prompt
 2. The SHA256 hash you calculated (to replace `[SHA256_HASH_HERE]`)
 3. Confirmation that the release v1.0.0 is published and accessible

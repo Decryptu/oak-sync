@@ -11,6 +11,7 @@ A macOS CLI tool for syncing production branches with preprod across multiple Oa
 After merging `preprod → prod` via pull request, you often need to sync both branches by force-pushing preprod to prod. This tool automates that process across all your Oak Research repositories.
 
 For each selected repository, `oak-sync`:
+
 1. Fetches the latest changes from origin
 2. Checks out the `prod` branch
 3. Resets `prod` to match `origin/preprod`
@@ -31,22 +32,26 @@ brew install oak-sync
 ### Manual Installation
 
 1. Clone this repository:
+
 ```bash
 git clone https://github.com/Decryptu/oak-sync.git
 cd oak-sync
 ```
 
 2. Install dependencies:
+
 ```bash
 brew install gum
 ```
 
 3. Make the script executable:
+
 ```bash
 chmod +x oak-sync
 ```
 
 4. Move it to your PATH:
+
 ```bash
 sudo cp oak-sync /usr/local/bin/
 ```
@@ -60,6 +65,7 @@ oak-sync
 ```
 
 The tool will:
+
 1. Display a welcome screen
 2. Show a checkbox list of all Oak Research repositories
 3. Allow you to select which repos to sync (use Space to select, Enter to confirm)
@@ -98,11 +104,13 @@ Select repositories to sync (use space to select, enter to confirm):
 ## Repository Configuration
 
 The tool expects repositories to be located at:
+
 ```
 /Users/gurvan/documents/github/oak-research-{name}
 ```
 
 Where `{name}` is one of:
+
 - `api`
 - `back`
 - `bots`
@@ -140,6 +148,7 @@ The tool includes several safety features:
 ### What Gets Modified
 
 When you sync a repository:
+
 - **Local `prod` branch** - Reset to match `origin/preprod`
 - **Remote `prod` branch** - Force-pushed to match `origin/preprod`
 - **No other branches are affected**
@@ -149,16 +158,19 @@ When you sync a repository:
 If you need to undo a sync:
 
 1. Find the previous commit hash:
+
 ```bash
 git reflog
 ```
 
 2. Reset to that commit:
+
 ```bash
 git reset --hard <commit-hash>
 ```
 
 3. Force push to restore:
+
 ```bash
 git push --force
 ```
@@ -176,6 +188,7 @@ git push --force
 ### "gum is not installed"
 
 Install gum using Homebrew:
+
 ```bash
 brew install gum
 ```
@@ -183,6 +196,7 @@ brew install gum
 ### "Directory not found"
 
 Ensure your repositories are located at the expected path:
+
 ```bash
 ls /Users/gurvan/documents/github/oak-research-*
 ```
@@ -190,6 +204,7 @@ ls /Users/gurvan/documents/github/oak-research-*
 ### "Not a git repository"
 
 The directory exists but isn't a git repository. Re-clone it:
+
 ```bash
 cd /Users/gurvan/documents/github
 git clone <repository-url>
@@ -198,6 +213,7 @@ git clone <repository-url>
 ### "Branch does not exist"
 
 Either the `prod` or `preprod` branch doesn't exist on origin. Verify:
+
 ```bash
 cd /path/to/repo
 git fetch origin
@@ -207,6 +223,7 @@ git branch -r
 ### "Failed to fetch/push"
 
 Check your network connection and git credentials:
+
 ```bash
 git fetch origin
 git remote -v
@@ -217,6 +234,7 @@ git remote -v
 ### Testing
 
 You can test the script without making changes by:
+
 1. Creating test repositories in a different location
 2. Modifying the `BASE_PATH` variable in the script
 3. Running the script against test repos
@@ -253,12 +271,14 @@ MIT License - Feel free to use and modify for your own needs.
 ## Support
 
 For issues or questions:
+
 - Open an issue on GitHub
 - Contact the Oak Research development team
 
 ## Changelog
 
 ### v1.0.0
+
 - Initial release
 - Interactive TUI with gum
 - Multi-repository selection
