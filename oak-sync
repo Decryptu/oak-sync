@@ -105,7 +105,7 @@ for repo in "${selected_repos[@]}"; do
     # Check if directory exists
     if [ ! -d "$repo_path" ]; then
         echo -e "${RED}✗ Error: Directory not found: $repo_path${NC}"
-        ((error_count++))
+        ((error_count += 1))
         failed_repos+=("$repo (directory not found)")
         continue
     fi
@@ -113,7 +113,7 @@ for repo in "${selected_repos[@]}"; do
     # Change to repo directory
     cd "$repo_path" || {
         echo -e "${RED}✗ Error: Could not change to directory: $repo_path${NC}"
-        ((error_count++))
+        ((error_count += 1))
         failed_repos+=("$repo (cd failed)")
         continue
     }
@@ -121,7 +121,7 @@ for repo in "${selected_repos[@]}"; do
     # Check if it's a git repository
     if [ ! -d ".git" ]; then
         echo -e "${RED}✗ Error: Not a git repository: $repo_path${NC}"
-        ((error_count++))
+        ((error_count += 1))
         failed_repos+=("$repo (not a git repo)")
         continue
     fi
@@ -132,7 +132,7 @@ for repo in "${selected_repos[@]}"; do
         echo -e "${GREEN}✓ Fetched latest from origin${NC}"
     else
         echo -e "${RED}✗ Error: Failed to fetch from origin${NC}"
-        ((error_count++))
+        ((error_count += 1))
         failed_repos+=("$repo (fetch failed)")
         continue
     fi
@@ -140,7 +140,7 @@ for repo in "${selected_repos[@]}"; do
     # Check if preprod branch exists
     if ! git show-ref --verify --quiet "refs/remotes/origin/$PREPROD_BRANCH"; then
         echo -e "${RED}✗ Error: Branch 'origin/$PREPROD_BRANCH' does not exist${NC}"
-        ((error_count++))
+        ((error_count += 1))
         failed_repos+=("$repo (preprod branch not found)")
         continue
     fi
@@ -148,7 +148,7 @@ for repo in "${selected_repos[@]}"; do
     # Check if prod branch exists
     if ! git show-ref --verify --quiet "refs/remotes/origin/$PROD_BRANCH"; then
         echo -e "${RED}✗ Error: Branch 'origin/$PROD_BRANCH' does not exist${NC}"
-        ((error_count++))
+        ((error_count += 1))
         failed_repos+=("$repo (prod branch not found)")
         continue
     fi
@@ -159,7 +159,7 @@ for repo in "${selected_repos[@]}"; do
         echo -e "${GREEN}✓ Checked out $PROD_BRANCH${NC}"
     else
         echo -e "${RED}✗ Error: Failed to checkout $PROD_BRANCH${NC}"
-        ((error_count++))
+        ((error_count += 1))
         failed_repos+=("$repo (checkout failed)")
         continue
     fi
@@ -170,7 +170,7 @@ for repo in "${selected_repos[@]}"; do
         echo -e "${GREEN}✓ Reset $PROD_BRANCH to origin/$PREPROD_BRANCH${NC}"
     else
         echo -e "${RED}✗ Error: Failed to reset to origin/$PREPROD_BRANCH${NC}"
-        ((error_count++))
+        ((error_count += 1))
         failed_repos+=("$repo (reset failed)")
         continue
     fi
@@ -181,12 +181,12 @@ for repo in "${selected_repos[@]}"; do
         echo -e "${GREEN}✓ Force pushed to origin/$PROD_BRANCH${NC}"
     else
         echo -e "${RED}✗ Error: Failed to force push${NC}"
-        ((error_count++))
+        ((error_count += 1))
         failed_repos+=("$repo (push failed)")
         continue
     fi
 
-    ((success_count++))
+    ((success_count += 1))
     echo -e "${GREEN}✓ Successfully synced $repo${NC}"
     echo ""
 done
